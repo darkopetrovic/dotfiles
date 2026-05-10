@@ -9,8 +9,8 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 # CONFIG — replace these with your actual Gist raw URLs after uploading
 # ---------------------------------------------------------------------------
-TMUX_CONF_URL="https://gist.githubusercontent.com/darkopetrovic/GIST_ID/raw/.tmux.conf"
-FZF_CONF_URL="https://gist.githubusercontent.com/darkopetrovic/GIST_ID/raw/.fzf.bash"
+TMUX_CONF_URL="https://gist.githubusercontent.com/darkopetrovic/86275057e4794b9b353b93b2bdc5fd99/raw/.tmux.conf"
+FZF_CONF_URL="https://gist.githubusercontent.com/darkopetrovic/77fcb58be54fdffa1c41d0fc1991359c/raw/.fzf.bash"
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
