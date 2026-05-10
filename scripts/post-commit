@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -e
+
+# Replace these IDs with your actual gist IDs.
+GIST_ID_FZF="77fcb58be54fdffa1c41d0fc1991359c"
+GIST_ID_TMUX="86275057e4794b9b353b93b2bdc5fd99"
+
+# Map repo paths to gist file names and gist IDs.
+declare -A gist_file_map=(
+  [".fzf.bash"]=".fzf.bash"
+  [".tmux.conf"]=".tmux.conf"
+)
+declare -A gist_id_map=(
+  [".fzf.bash"]="$GIST_ID_FZF"
+  [".tmux.conf"]="$GIST_ID_TMUX"
+)
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+changed_files=$(git diff-tree --no-commit-id --name-only -r HEAD)
+
+for file in .fzf.bash .tmux.conf; do
+  if printf '%s\n' "$changed_files" | grep -qx "$file"; then
+    gist_id=${gist_id_map[$file]}
+    gist_name=${gist_file_map[$file]}
+
+    echo "Updating gist for $file..."
+    gh gist edit "$gist_id" --filename "$gist_name" "$repo_root/$file"
+  fi
+done
