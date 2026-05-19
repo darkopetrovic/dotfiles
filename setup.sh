@@ -13,6 +13,7 @@ TMUX_CONF_URL="https://gist.githubusercontent.com/darkopetrovic/86275057e4794b9b
 FZF_CONF_URL="https://gist.githubusercontent.com/darkopetrovic/77fcb58be54fdffa1c41d0fc1991359c/raw/.fzf.bash"
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASHRC="$HOME/.bashrc"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -61,7 +62,44 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 4. Deploy configs — prefer local files, fall back to Gist download
+# 4. Install bat
+# ---------------------------------------------------------------------------
+if command -v bat &>/dev/null; then
+  success "bat already installed ($(bat --version))"
+else
+  info "Installing bat..."
+  if apt-cache show bat &>/dev/null 2>&1; then
+    sudo apt-get install -y bat
+  else
+    info "bat not in apt, installing from GitHub releases..."
+    BAT_VERSION=$(curl -fsSL https://api.github.com/repos/sharkdp/bat/releases/latest \
+      | grep '"tag_name"' | cut -d'"' -f4)
+    BAT_DEB="bat_${BAT_VERSION#v}_$(dpkg --print-architecture).deb"
+    curl -fsSL "https://github.com/sharkdp/bat/releases/download/${BAT_VERSION}/${BAT_DEB}" \
+      -o "/tmp/${BAT_DEB}"
+    sudo dpkg -i "/tmp/${BAT_DEB}"
+    rm -f "/tmp/${BAT_DEB}"
+  fi
+  # Ubuntu installs bat as 'batcat' due to a naming conflict; create a symlink
+  if ! command -v bat &>/dev/null && command -v batcat &>/dev/null; then
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"
+    info "Created symlink: ~/.local/bin/bat → $(command -v batcat)"
+  fi
+  success "bat installed ($(bat --version 2>/dev/null || batcat --version))"
+fi
+
+# Ensure ~/.local/bin is in PATH (needed for the bat symlink above)
+LOCAL_BIN_LINE='export PATH="$HOME/.local/bin:$PATH"'
+if ! grep -qF "$LOCAL_BIN_LINE" "$BASHRC" 2>/dev/null; then
+  echo "" >> "$BASHRC"
+  echo "# local user binaries (e.g. bat symlink)" >> "$BASHRC"
+  echo "$LOCAL_BIN_LINE" >> "$BASHRC"
+  success "~/.local/bin added to PATH in $BASHRC"
+fi
+
+# ---------------------------------------------------------------------------
+# 5. Deploy configs — prefer local files, fall back to Gist download
 # ---------------------------------------------------------------------------
 deploy_config() {
   local src_local="$1"   # path inside this repo
@@ -86,9 +124,8 @@ deploy_config "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"  "$TMUX_CONF_URL"
 deploy_config "$DOTFILES_DIR/.fzf.bash"  "$HOME/.fzf.bash"   "$FZF_CONF_URL"
 
 # ---------------------------------------------------------------------------
-# 5. Source fzf config in .bashrc (idempotent)
+# 6. Source fzf config in .bashrc (idempotent)
 # ---------------------------------------------------------------------------
-BASHRC="$HOME/.bashrc"
 FZF_SOURCE_LINE='[ -f ~/.fzf.bash ] && source ~/.fzf.bash'
 
 if ! grep -qF "$FZF_SOURCE_LINE" "$BASHRC" 2>/dev/null; then

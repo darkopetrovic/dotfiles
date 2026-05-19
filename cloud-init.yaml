@@ -5,42 +5,16 @@ users:
     groups: [sudo, adm]
     shell: /bin/bash
     sudo: "ALL=(ALL) NOPASSWD:ALL"
-    lock_passwd: false
 
 package_update: true
 package_upgrade: false
 
 packages:
-  - tmux
-  - fzf
   - git
   - curl
 
 runcmd:
-  # install fzf shell integration if available
-  - |
-    if [ -d /usr/share/doc/fzf/examples ]; then
-      cp /usr/share/doc/fzf/examples/key-bindings.bash /etc/profile.d/fzf-key-bindings.sh || true
-      cp /usr/share/doc/fzf/examples/completion.bash /etc/profile.d/fzf-completion.sh || true
-    fi
-
-  # create user config dirs
-  - mkdir -p /home/ubuntu/.config
-  - mkdir -p /home/ubuntu/.tmux
-
-  # download tmux config from gist
-  - curl -L https://gist.githubusercontent.com/darkopetrovic/86275057e4794b9b353b93b2bdc5fd99/raw/.tmux.conf -o /home/ubuntu/.tmux.conf
-
-  # download fzf bash config from gist
-  - curl -L https://gist.githubusercontent.com/darkopetrovic/77fcb58be54fdffa1c41d0fc1991359c/raw/.fzf.bash -o /home/ubuntu/.fzf.bash
-
-  # optional bashrc additions (if you want a custom file)
-  - |
-    if [ -n "${CUSTOM_BASHRC_URL:-}" ]; then
-      curl -L "$CUSTOM_BASHRC_URL" -o /home/ubuntu/.bashrc
-    fi
-
-  # permissions
-  - chown -R ubuntu:ubuntu /home/ubuntu
+  # run setup.sh as the ubuntu user (Option B — no repo clone needed)
+  - su - ubuntu -c "bash <(curl -fsSL https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/setup.sh)"
 
 final_message: "Development environment ready."
