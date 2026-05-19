@@ -99,7 +99,29 @@ if ! grep -qF "$LOCAL_BIN_LINE" "$BASHRC" 2>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# 5. Deploy configs — prefer local files, fall back to Gist download
+# 5. Install ripgrep
+# ---------------------------------------------------------------------------
+if command -v rg &>/dev/null; then
+  success "ripgrep already installed ($(rg --version | head -1))"
+else
+  info "Installing ripgrep..."
+  if apt-cache show ripgrep &>/dev/null 2>&1; then
+    sudo apt-get install -y ripgrep
+  else
+    info "ripgrep not in apt, installing from GitHub releases..."
+    RG_VERSION=$(curl -fsSL https://api.github.com/repos/BurntSushi/ripgrep/releases/latest \
+      | grep '"tag_name"' | cut -d'"' -f4)
+    RG_DEB="ripgrep_${RG_VERSION}_$(dpkg --print-architecture).deb"
+    curl -fsSL "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VERSION}/${RG_DEB}" \
+      -o "/tmp/${RG_DEB}"
+    sudo dpkg -i "/tmp/${RG_DEB}"
+    rm -f "/tmp/${RG_DEB}"
+  fi
+  success "ripgrep installed ($(rg --version | head -1))"
+fi
+
+# ---------------------------------------------------------------------------
+# 6. Deploy configs — prefer local files, fall back to Gist download
 # ---------------------------------------------------------------------------
 deploy_config() {
   local src_local="$1"   # path inside this repo
@@ -124,7 +146,7 @@ deploy_config "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"  "$TMUX_CONF_URL"
 deploy_config "$DOTFILES_DIR/.fzf.bash"  "$HOME/.fzf.bash"   "$FZF_CONF_URL"
 
 # ---------------------------------------------------------------------------
-# 6. Source fzf config in .bashrc (idempotent)
+# 7. Source fzf config in .bashrc (idempotent)
 # ---------------------------------------------------------------------------
 FZF_SOURCE_LINE='[ -f ~/.fzf.bash ] && source ~/.fzf.bash'
 
