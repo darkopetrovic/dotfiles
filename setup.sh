@@ -78,7 +78,7 @@ checkbox_menu() {
         [[ "${sel[$cur]}" == 1 ]] && sel[$cur]=0 || sel[$cur]=1 ;;
       a | A) for ((i = 0; i < n; i++)); do sel[i]=1; done ;;
       n | N) for ((i = 0; i < n; i++)); do sel[i]=0; done ;;
-      $'\n' | $'\r') break ;;
+      '' | $'\n' | $'\r') break ;;
     esac
 
     _cm_draw
