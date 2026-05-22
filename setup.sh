@@ -63,11 +63,15 @@ checkbox_menu() {
 
   while true; do
     local key seq
-    IFS= read -r -s -n1 key
+    IFS= read -r -s -d '' -n1 key || true
     if [[ "$key" == $'\x1b' ]]; then
-      IFS= read -r -s -n2 -t 0.1 seq 2>/dev/null || seq=""
+      IFS= read -r -s -d '' -n2 -t 0.1 seq 2>/dev/null || seq=""
       key="$key$seq"
     fi
+
+    case "$key" in
+      $'\n' | $'\r') break ;;
+    esac
 
     printf "\033[%dA" $n  # move cursor back to top of menu
 
@@ -78,7 +82,6 @@ checkbox_menu() {
         [[ "${sel[$cur]}" == 1 ]] && sel[$cur]=0 || sel[$cur]=1 ;;
       a | A) for ((i = 0; i < n; i++)); do sel[i]=1; done ;;
       n | N) for ((i = 0; i < n; i++)); do sel[i]=0; done ;;
-      '' | $'\n' | $'\r') break ;;
     esac
 
     _cm_draw
