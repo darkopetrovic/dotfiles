@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Sets up per-terminal Starship configs:
-#   - symlinks starship-*.toml into ~/.config/
+# Sets up terminal configs (Starship, Nushell):
+#   - symlinks starship/*.toml into ~/.config/
+#   - symlinks nushell/*.nu into ~/.config/nushell/
 #   - adds STARSHIP_CONFIG detection to ~/.bashrc (idempotent)
 set -euo pipefail
 
@@ -24,8 +25,25 @@ link_config() {
   fi
 }
 
-link_config "$TERMINALS_DIR/starship-minimal.toml" "$CONFIG_DIR/starship-minimal.toml"
-link_config "$TERMINALS_DIR/starship-vscode.toml"  "$CONFIG_DIR/starship-vscode.toml"
+link_config "$TERMINALS_DIR/starship/minimal.toml"  "$CONFIG_DIR/starship-minimal.toml"
+link_config "$TERMINALS_DIR/starship/vscode.toml"   "$CONFIG_DIR/starship-vscode.toml"
+link_config "$TERMINALS_DIR/starship/nushell.toml"  "$CONFIG_DIR/starship-nushell.toml"
+
+# ── Nushell configs ────────────────────────────────────────────────────────────
+NUSHELL_DIR="$HOME/.config/nushell"
+if command -v nu &>/dev/null || [[ -d "$NUSHELL_DIR" ]]; then
+  mkdir -p "$NUSHELL_DIR"
+  link_config "$TERMINALS_DIR/nushell/env.nu"    "$NUSHELL_DIR/env.nu"
+  link_config "$TERMINALS_DIR/nushell/config.nu" "$NUSHELL_DIR/config.nu"
+  if command -v atuin &>/dev/null; then
+    atuin init nu > "$NUSHELL_DIR/atuin.nu"
+    success "Generated atuin.nu"
+  else
+    info "Atuin not found — skipping atuin.nu generation"
+  fi
+else
+  info "Nushell not found — skipping nushell config symlinks"
+fi
 
 # ── Update ~/.bashrc ───────────────────────────────────────────────────────────
 MARKER="STARSHIP_CONFIG"
@@ -38,10 +56,10 @@ elif grep -qF 'starship init bash' "$BASHRC" 2>/dev/null; then
   info "Adding STARSHIP_CONFIG detection after existing starship init..."
   cat >> "$BASHRC" <<'EOF'
 
-# Per-terminal Starship config (vscode -> compact, Windows Terminal -> no icons, WezTerm -> full)
+# Per-terminal Starship config (vscode -> compact, WezTerm -> full icons, everything else -> minimal)
 if [[ "$TERM_PROGRAM" == "vscode" ]]; then
   export STARSHIP_CONFIG="$HOME/.config/starship-vscode.toml"
-elif [[ -n "$WT_SESSION" ]]; then
+elif [[ "$TERM_PROGRAM" != "WezTerm" ]]; then
   export STARSHIP_CONFIG="$HOME/.config/starship-minimal.toml"
 fi
 EOF
@@ -53,10 +71,10 @@ else
 
 # Starship prompt with per-terminal config
 if command -v starship &>/dev/null; then
-  # vscode -> compact, Windows Terminal -> no icons, WezTerm -> full (default)
+  # vscode -> compact, WezTerm -> full icons, everything else -> minimal
   if [[ "$TERM_PROGRAM" == "vscode" ]]; then
     export STARSHIP_CONFIG="$HOME/.config/starship-vscode.toml"
-  elif [[ -n "$WT_SESSION" ]]; then
+  elif [[ "$TERM_PROGRAM" != "WezTerm" ]]; then
     export STARSHIP_CONFIG="$HOME/.config/starship-minimal.toml"
   fi
   eval "$(starship init bash)"

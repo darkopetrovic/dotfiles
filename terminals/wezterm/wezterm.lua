@@ -48,6 +48,9 @@ config.default_domain = "WSL:Ubuntu-26.04"
 -- Automatically reload config on save
 config.automatically_reload_config = true
 
+-- Disable Kitty keyboard protocol: causes Nushell prompt redraws to shift output upward in WezTerm
+config.enable_kitty_keyboard = false
+
 -- Keybindings
 config.keys = {
 	{ key = "Enter", mods = "CTRL", action = wezterm.action({ SendString = "\x1b[13;5u" }) },
