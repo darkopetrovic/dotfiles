@@ -8,6 +8,7 @@ config.color_scheme = "Catppuccin Mocha"
 config.window_background_opacity = 0.93
 config.macos_window_background_blur = 20
 config.window_decorations = "RESIZE|INTEGRATED_BUTTONS"
+config.integrated_title_button_style = "Windows" 
 config.window_close_confirmation = "NeverPrompt"
 config.adjust_window_size_when_changing_font_size = true
 config.check_for_updates = false
@@ -28,8 +29,8 @@ config.default_cursor_style = "SteadyBar"
 config.cursor_thickness = 2.5
 
 -- Tab bar
-config.use_fancy_tab_bar = false
-config.tab_bar_at_bottom = true
+config.use_fancy_tab_bar = true
+config.tab_bar_at_bottom = false
 config.enable_tab_bar = true
 config.show_tab_index_in_tab_bar = false
 config.tab_max_width = 32
@@ -81,7 +82,9 @@ config.keys = {
 	{ key = "LeftArrow", mods = "CTRL|SHIFT", action = act({ SendString = "\x1b[1;6D" }) },
 	{ key = "RightArrow", mods = "CTRL|SHIFT", action = act({ SendString = "\x1b[1;6C" }) },
 	-- Close pane
-	{ key = "w", mods = "ALT|SHIFT", action = act({ CloseCurrentPane = { confirm = true } }) },
+	{ key = "w", mods = "CTRL", action = act({ CloseCurrentPane = { confirm = true } }) },
+	-- Paste
+	{ key = "v", mods = "CTRL", action = act.PasteFrom("Clipboard") },
 }
 
 -- Hyperlinks
@@ -114,14 +117,27 @@ config.hyperlink_rules = {
 }
 
 -- Custom tab title with padding and naming support
+local known_shells = { bash = true, zsh = true, fish = true, nu = true, sh = true, pwsh = true, nushell = true }
+
 wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
 	local title = tab.tab_title
 	if not title or title == "" then
 		local pane = tab.active_pane
 		local process = pane.foreground_process_name or ""
-		title = process:gsub(".*[/\\]", "")
-		if title == "" or title == "wslhost.exe" or title:find("%.exe$") then
-			title = "bash"
+		local basename = process:gsub(".*[/\\]", "")
+
+		if basename ~= "" and not basename:find("%.exe$") then
+			title = basename
+		else
+			-- Scan pane.title (set via OSC sequences by the shell) for a known shell name
+			local pane_title = pane.title or ""
+			title = "shell"
+			for word in pane_title:gmatch("%a+") do
+				if known_shells[word:lower()] then
+					title = word:lower()
+					break
+				end
+			end
 		end
 	end
 	local colors = { bg = "#585b70", fg = "#cdd6f4" }
@@ -147,6 +163,22 @@ table.insert(config.keys, {
 		end),
 	} }),
 })
+
+-- Fancy tab bar frame styling (Catppuccin Mocha)
+config.window_frame = {
+	font = wezterm.font("Ubuntu Mono", { weight = "Bold" }),
+	font_size = 13.0,
+	active_titlebar_bg = "#1e1e2e",
+	inactive_titlebar_bg = "#181825",
+	active_titlebar_fg = "#cdd6f4",
+	inactive_titlebar_fg = "#6c7086",
+	active_titlebar_border_bottom = "#1e1e2e",
+	inactive_titlebar_border_bottom = "#181825",
+	button_fg = "#6c7086",
+	button_bg = "#1e1e2e",
+	button_hover_fg = "#cdd6f4",
+	button_hover_bg = "#313244",
+}
 
 -- Tab bar styling
 config.colors = {
