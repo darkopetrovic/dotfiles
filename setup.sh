@@ -14,6 +14,8 @@ TMUX_CONF_URL="https://gist.githubusercontent.com/darkopetrovic/86275057e4794b9b
 FZF_CONF_URL="https://gist.githubusercontent.com/darkopetrovic/77fcb58be54fdffa1c41d0fc1991359c/raw/.fzf.bash"
 NU_CONF_URL="https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/terminals/nushell/config.nu"
 NU_ENV_URL="https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/terminals/nushell/env.nu"
+STARSHIP_NU_URL="https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/terminals/starship/nushell.toml"
+STARSHIP_MINIMAL_URL="https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/terminals/starship/minimal.toml"
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASHRC="$HOME/.bashrc"
@@ -343,8 +345,10 @@ NUEOF
   # Deploy nushell configs
   NU_CONF_DIR="$HOME/.config/nushell"
   mkdir -p "$NU_CONF_DIR"
-  deploy_config "$DOTFILES_DIR/terminals/nushell/config.nu" "$NU_CONF_DIR/config.nu" "$NU_CONF_URL"
-  deploy_config "$DOTFILES_DIR/terminals/nushell/env.nu"    "$NU_CONF_DIR/env.nu"    "$NU_ENV_URL"
+  deploy_config "$DOTFILES_DIR/terminals/nushell/config.nu"   "$NU_CONF_DIR/config.nu"              "$NU_CONF_URL"
+  deploy_config "$DOTFILES_DIR/terminals/nushell/env.nu"      "$NU_CONF_DIR/env.nu"                 "$NU_ENV_URL"
+  deploy_config "$DOTFILES_DIR/terminals/starship/nushell.toml" "$HOME/.config/starship-nushell.toml" "$STARSHIP_NU_URL"
+  deploy_config "$DOTFILES_DIR/terminals/starship/minimal.toml" "$HOME/.config/starship-minimal.toml" "$STARSHIP_MINIMAL_URL"
   # Ensure config.nu's `source atuin.nu` doesn't fail if atuin isn't installed yet
   if [[ ! -f "$NU_CONF_DIR/atuin.nu" ]]; then
     touch "$NU_CONF_DIR/atuin.nu"
