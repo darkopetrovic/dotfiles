@@ -330,6 +330,15 @@ if [[ "${INSTALL[nushell]}" == "1" ]]; then
     success "nushell installed ($(nu --version))"
   fi
 
+  # Install starship prompt for nushell
+  if command -v starship &>/dev/null; then
+    success "starship already installed ($(starship --version))"
+  else
+    info "Installing starship..."
+    sudo apt-get install -y starship
+    success "starship installed"
+  fi
+
   # Make nushell the default interactive shell in .bashrc
   if ! grep -qF 'exec nu' "$BASHRC" 2>/dev/null; then
     cat >> "$BASHRC" <<'NUEOF'

@@ -25,9 +25,10 @@ link_config() {
   fi
 }
 
-link_config "$TERMINALS_DIR/starship/minimal.toml"  "$CONFIG_DIR/starship-minimal.toml"
-link_config "$TERMINALS_DIR/starship/vscode.toml"   "$CONFIG_DIR/starship-vscode.toml"
-link_config "$TERMINALS_DIR/starship/nushell.toml"  "$CONFIG_DIR/starship-nushell.toml"
+link_config "$TERMINALS_DIR/starship/default.toml"   "$CONFIG_DIR/starship.toml"
+link_config "$TERMINALS_DIR/starship/minimal.toml"   "$CONFIG_DIR/starship-minimal.toml"
+link_config "$TERMINALS_DIR/starship/vscode.toml"    "$CONFIG_DIR/starship-vscode.toml"
+link_config "$TERMINALS_DIR/starship/nushell.toml"   "$CONFIG_DIR/starship-nushell.toml"
 
 # ── Nushell configs ────────────────────────────────────────────────────────────
 NUSHELL_DIR="$HOME/.config/nushell"
