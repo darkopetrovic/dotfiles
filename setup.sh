@@ -14,8 +14,10 @@ TMUX_CONF_URL="https://gist.githubusercontent.com/darkopetrovic/86275057e4794b9b
 FZF_CONF_URL="https://gist.githubusercontent.com/darkopetrovic/77fcb58be54fdffa1c41d0fc1991359c/raw/.fzf.bash"
 NU_CONF_URL="https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/terminals/nushell/config.nu"
 NU_ENV_URL="https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/terminals/nushell/env.nu"
+STARSHIP_DEFAULT_URL="https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/terminals/starship/default.toml"
 STARSHIP_NU_URL="https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/terminals/starship/nushell.toml"
 STARSHIP_MINIMAL_URL="https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/terminals/starship/minimal.toml"
+STARSHIP_VSCODE_URL="https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/terminals/starship/vscode.toml"
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASHRC="$HOME/.bashrc"
@@ -345,10 +347,11 @@ NUEOF
   # Deploy nushell configs
   NU_CONF_DIR="$HOME/.config/nushell"
   mkdir -p "$NU_CONF_DIR"
-  deploy_config "$DOTFILES_DIR/terminals/nushell/config.nu"   "$NU_CONF_DIR/config.nu"              "$NU_CONF_URL"
-  deploy_config "$DOTFILES_DIR/terminals/nushell/env.nu"      "$NU_CONF_DIR/env.nu"                 "$NU_ENV_URL"
-  deploy_config "$DOTFILES_DIR/terminals/starship/nushell.toml" "$HOME/.config/starship-nushell.toml" "$STARSHIP_NU_URL"
-  deploy_config "$DOTFILES_DIR/terminals/starship/minimal.toml" "$HOME/.config/starship-minimal.toml" "$STARSHIP_MINIMAL_URL"
+  deploy_config "$DOTFILES_DIR/terminals/nushell/config.nu"     "$NU_CONF_DIR/config.nu"                "$NU_CONF_URL"
+  deploy_config "$DOTFILES_DIR/terminals/nushell/env.nu"        "$NU_CONF_DIR/env.nu"                   "$NU_ENV_URL"
+  deploy_config "$DOTFILES_DIR/terminals/starship/nushell.toml" "$HOME/.config/starship-nushell.toml"   "$STARSHIP_NU_URL"
+  deploy_config "$DOTFILES_DIR/terminals/starship/minimal.toml" "$HOME/.config/starship-minimal.toml"   "$STARSHIP_MINIMAL_URL"
+  deploy_config "$DOTFILES_DIR/terminals/starship/vscode.toml"  "$HOME/.config/starship-vscode.toml"    "$STARSHIP_VSCODE_URL"
   # Ensure config.nu's `source atuin.nu` doesn't fail if atuin isn't installed yet
   if [[ ! -f "$NU_CONF_DIR/atuin.nu" ]]; then
     touch "$NU_CONF_DIR/atuin.nu"
@@ -360,8 +363,9 @@ fi
 # 11. Deploy configs — prefer local files, fall back to Gist download
 # ---------------------------------------------------------------------------
 if [[ "${INSTALL[configs]}" == "1" ]]; then
-  deploy_config "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf" "$TMUX_CONF_URL"
-  deploy_config "$DOTFILES_DIR/.fzf.bash"  "$HOME/.fzf.bash"  "$FZF_CONF_URL"
+  deploy_config "$DOTFILES_DIR/.tmux.conf"                      "$HOME/.tmux.conf"                    "$TMUX_CONF_URL"
+  deploy_config "$DOTFILES_DIR/.fzf.bash"                       "$HOME/.fzf.bash"                     "$FZF_CONF_URL"
+  deploy_config "$DOTFILES_DIR/terminals/starship/default.toml" "$HOME/.config/starship.toml"         "$STARSHIP_DEFAULT_URL"
 
   FZF_SOURCE_LINE='[ -f ~/.fzf.bash ] && source ~/.fzf.bash'
   if ! grep -qF "$FZF_SOURCE_LINE" "$BASHRC" 2>/dev/null; then
