@@ -20,9 +20,25 @@
 $env.config.show_banner = false
 $env.config.render_right_prompt_on_last_line = true
 $env.config.shell_integration.osc133 = false
+$env.config.shell_integration.osc2 = false
 
 # Re-query terminal width before each command so zoom/resize is always reflected
-$env.config.hooks.pre_execution = [{|| $env.COLUMNS = (term size).columns }]
+$env.config.hooks.pre_execution = [
+    {|| $env.COLUMNS = (term size).columns }
+    {||
+        let cmd = (try {
+            history | last 1 | get command.0 | str trim | split row ' ' | first | default "nu"
+        } catch { "nu" })
+        let cmd = if ($cmd | is-empty) { "nu" } else { $cmd }
+        print -n $"\e]0;($cmd)\a"
+    }
+]
+
+# Reset tab title to "nu" when returning to the prompt
+$env.config.hooks.pre_prompt = [{|| print -n "\e]0;nu\a" }]
+
+# Set title immediately when nushell starts, before the first prompt renders
+print -n $"\e]0;nu\a"
 
 # Truncate cells instead of wrapping when a column is squeezed narrow
 $env.config.table.trim = {

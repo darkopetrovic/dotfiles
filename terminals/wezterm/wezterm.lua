@@ -21,7 +21,10 @@ config.initial_cols = 140
 config.initial_rows = 40
 
 -- Font
-config.font = wezterm.font("Ubuntu Mono", { weight = "Bold" })
+config.font = wezterm.font_with_fallback({
+	{ family = "Ubuntu Mono", weight = "Bold" },
+	"Symbols Nerd Font Mono",
+})
 config.font_size = 16.0
 
 -- Cursor
@@ -34,6 +37,10 @@ config.tab_bar_at_bottom = false
 config.enable_tab_bar = true
 config.show_tab_index_in_tab_bar = false
 config.tab_max_width = 32
+
+-- Scrollbar
+config.enable_scroll_bar = true
+config.scrollback_lines = 10000
 
 -- Padding
 config.window_padding = {
@@ -82,7 +89,7 @@ config.keys = {
 	{ key = "LeftArrow", mods = "CTRL|SHIFT", action = act({ SendString = "\x1b[1;6D" }) },
 	{ key = "RightArrow", mods = "CTRL|SHIFT", action = act({ SendString = "\x1b[1;6C" }) },
 	-- Close pane
-	{ key = "w", mods = "CTRL", action = act({ CloseCurrentPane = { confirm = true } }) },
+	{ key = "w", mods = "CTRL", action = act({ CloseCurrentPane = { confirm = false } }) },
 	-- Paste
 	{ key = "v", mods = "CTRL", action = act.PasteFrom("Clipboard") },
 }
@@ -116,37 +123,61 @@ config.hyperlink_rules = {
 	},
 }
 
--- Custom tab title with padding and naming support
-local known_shells = { bash = true, zsh = true, fish = true, nu = true, sh = true, pwsh = true, nushell = true }
+-- Custom tab title with powerline arrows, icons, and hover state
+local known_shells = { bash = true, zsh = true, fish = true, nu = true, sh = true, pwsh = true, nushell = true, wslhost = true }
+
+local function nf(name)
+	return wezterm.nerdfonts[name] or ""
+end
+
+local process_icons = {
+	nu      = utf8.char(0xE795),   -- nf-dev-terminal
+	nushell = utf8.char(0xE795),
+	bash    = utf8.char(0xE795),
+	zsh     = utf8.char(0xE795),
+	fish    = utf8.char(0xE795),
+	nvim    = utf8.char(0xE62B),   -- nf-seti-vim
+	vim     = utf8.char(0xE62B),
+	ssh     = nf("md_server"),
+	python  = nf("dev_python"),
+	python3 = nf("dev_python"),
+	node    = utf8.char(0xE617),   -- nf-dev-nodejs_small
+	git     = utf8.char(0xE702),   -- nf-dev-git
+	htop    = nf("fa_bar_chart"),
+	btop    = nf("fa_bar_chart"),
+}
+
+local ARROW_R = nf("pl_right_hard_divider")
+local ARROW_L = nf("pl_left_hard_divider")
+
 
 wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
-	local title = tab.tab_title
-	if not title or title == "" then
-		local pane = tab.active_pane
-		local process = pane.foreground_process_name or ""
-		local basename = process:gsub(".*[/\\]", "")
+	-- tab.tab_title is maintained by update-status via pane:get_title() (live OSC read).
+	-- pane.title in PaneInformation is a WSL-process snapshot, not our OSC title — don't use it.
+	local title = (tab.tab_title and tab.tab_title ~= "" and tab.tab_title) or "nu"
+	local icon = process_icons[title:lower()] or utf8.char(0xE795)
+	local label = icon .. " " .. title
 
-		if basename ~= "" and not basename:find("%.exe$") then
-			title = basename
-		else
-			-- Scan pane.title (set via OSC sequences by the shell) for a known shell name
-			local pane_title = pane.title or ""
-			title = "shell"
-			for word in pane_title:gmatch("%a+") do
-				if known_shells[word:lower()] then
-					title = word:lower()
-					break
-				end
-			end
-		end
-	end
-	local colors = { bg = "#585b70", fg = "#cdd6f4" }
+	local bar_bg = "#1e1e2e"
+	local bg, fg
 	if tab.is_active then
-		colors = { bg = "#cba6f7", fg = "#1e1e2e" }
+		bg, fg = "#cba6f7", "#1e1e2e"
+	elseif hover then
+		bg, fg = "#45475a", "#cdd6f4"
+	else
+		bg, fg = "#313244", "#cdd6f4"
 	end
+
 	return {
-		{ Background = { Color = colors.bg } },
-		{ Text = "  " .. title .. "  " },
+		{ Background = { Color = bar_bg } },
+		{ Foreground = { Color = bg } },
+		{ Text = ARROW_R },
+		{ Background = { Color = bg } },
+		{ Foreground = { Color = fg } },
+		{ Text = " " .. label .. " " },
+		{ Background = { Color = bar_bg } },
+		{ Foreground = { Color = bg } },
+		{ Text = ARROW_L },
 	}
 end)
 
@@ -166,7 +197,7 @@ table.insert(config.keys, {
 
 -- Fancy tab bar frame styling (Catppuccin Mocha)
 config.window_frame = {
-	font = wezterm.font("Ubuntu Mono", { weight = "Bold" }),
+	font = wezterm.font_with_fallback({ { family = "Ubuntu Mono", weight = "Bold" }, "Symbols Nerd Font Mono" }),
 	font_size = 13.0,
 	active_titlebar_bg = "#1e1e2e",
 	inactive_titlebar_bg = "#181825",
@@ -228,6 +259,21 @@ wezterm.on("update-status", function(window, pane)
 	local dir = ""
 	if cwd then
 		dir = cwd.file_path:gsub(".*/", "")
+	end
+
+	local ok, pt = pcall(function() return pane:get_title() end)
+	pt = (ok and pt) or ""
+
+	local name = nil
+	for word in pt:gmatch("%a+") do
+		local w = word:lower()
+		if (known_shells[w] or process_icons[w]) and w ~= "wslhost" and w ~= "exe" then
+			name = w
+			break
+		end
+	end
+	if name then
+		window:mux_window():active_tab():set_title(name)
 	end
 
 	window:set_right_status(wezterm.format({
