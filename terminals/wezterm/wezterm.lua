@@ -152,8 +152,6 @@ local ARROW_L = nf("pl_left_hard_divider")
 
 
 wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
-	-- tab.tab_title is maintained by update-status via pane:get_title() (live OSC read).
-	-- pane.title in PaneInformation is a WSL-process snapshot, not our OSC title — don't use it.
 	local title = (tab.tab_title and tab.tab_title ~= "" and tab.tab_title) or "nu"
 	local icon = process_icons[title:lower()] or utf8.char(0xE795)
 	local label = icon .. " " .. title
@@ -259,21 +257,6 @@ wezterm.on("update-status", function(window, pane)
 	local dir = ""
 	if cwd then
 		dir = cwd.file_path:gsub(".*/", "")
-	end
-
-	local ok, pt = pcall(function() return pane:get_title() end)
-	pt = (ok and pt) or ""
-
-	local name = nil
-	for word in pt:gmatch("%a+") do
-		local w = word:lower()
-		if (known_shells[w] or process_icons[w]) and w ~= "wslhost" and w ~= "exe" then
-			name = w
-			break
-		end
-	end
-	if name then
-		window:mux_window():active_tab():set_title(name)
 	end
 
 	window:set_right_status(wezterm.format({

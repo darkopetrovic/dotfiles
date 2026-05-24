@@ -50,3 +50,13 @@ config.font = wezterm.font_with_fallback({
 ```
 
 The same fallback is set on `config.window_frame.font` so tab bar icons also use it.
+
+## Fix starship prompt icons
+
+Add `Symbols Nerd Font Mono` in `settings.json`:
+
+```json
+"font": {
+    "face": "Ubuntu Mono, Symbols Nerd Font Mono"
+},
+```
