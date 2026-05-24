@@ -17,8 +17,16 @@
 # You can remove these comments if you want or leave
 # them for future reference.
 
-# Starship prompt
-$env.STARSHIP_CONFIG = $"($env.HOME)/.config/starship-nushell.toml"
+# Editor
+$env.EDITOR = "nano"
+$env.VISUAL = "nano"
+
+# Starship prompt — icons work in WezTerm (Nerd Font), fall back to minimal elsewhere
+$env.STARSHIP_CONFIG = if ($env.TERM_PROGRAM? | default "") == "WezTerm" {
+    $"($env.HOME)/.config/starship-nushell.toml"
+} else {
+    $"($env.HOME)/.config/starship-minimal.toml"
+}
 $env.STARSHIP_SHELL = "nu"
 $env.STARSHIP_SESSION_KEY = (random chars -l 16)
 $env.PROMPT_INDICATOR = {|| ""}

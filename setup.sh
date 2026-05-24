@@ -108,9 +108,10 @@ LABELS=(
   "just — command runner"
   "uv — Python package manager"
   "atuin — shell history sync"
+  "nushell — modern shell"
   "dotfile configs (.tmux.conf, .fzf.bash)"
 )
-KEYS=(tmux fzf bat ripgrep nodejs pnpm just uv atuin configs)
+KEYS=(tmux fzf bat ripgrep nodejs pnpm just uv atuin nushell configs)
 
 echo "============================================"
 echo " dotfiles setup — select components to install"
@@ -119,7 +120,7 @@ echo "============================================"
 declare -a SELECTED
 if [[ "${1:-}" =~ ^(-y|--yes|--all)$ ]]; then
   # Non-interactive: select everything
-  SELECTED=(1 1 1 1 1 1 1 1 1 1)
+  SELECTED=(1 1 1 1 1 1 1 1 1 1 1)
   info "Non-interactive mode — installing all components."
 else
   checkbox_menu SELECTED "${LABELS[@]}"
@@ -134,7 +135,7 @@ done
 # ---------------------------------------------------------------------------
 # apt update — only if at least one apt-sourced package is selected
 # ---------------------------------------------------------------------------
-APT_NEEDED=$(( INSTALL[tmux] + INSTALL[fzf] + INSTALL[bat] + INSTALL[ripgrep] + INSTALL[nodejs] ))
+APT_NEEDED=$(( INSTALL[tmux] + INSTALL[fzf] + INSTALL[bat] + INSTALL[ripgrep] + INSTALL[nodejs] + INSTALL[nushell] ))
 if (( APT_NEEDED > 0 )); then
   info "Updating package index..."
   sudo apt-get update -qq
@@ -295,7 +296,45 @@ if [[ "${INSTALL[atuin]}" == "1" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 10. Deploy configs — prefer local files, fall back to Gist download
+# 10. nushell
+# ---------------------------------------------------------------------------
+if [[ "${INSTALL[nushell]}" == "1" ]]; then
+  if command -v nu &>/dev/null; then
+    success "nushell already installed ($(nu --version))"
+  else
+    info "Installing nushell..."
+    if apt-cache show nushell &>/dev/null 2>&1; then
+      sudo apt-get install -y nushell
+    else
+      info "nushell not in apt, installing from GitHub releases..."
+      NU_VERSION=$(curl -fsSL https://api.github.com/repos/nushell/nushell/releases/latest \
+        | grep '"tag_name"' | cut -d'"' -f4)
+      NU_DEB="nu_${NU_VERSION#v}_$(dpkg --print-architecture).deb"
+      curl -fsSL "https://github.com/nushell/nushell/releases/download/${NU_VERSION}/${NU_DEB}" \
+        -o "/tmp/${NU_DEB}"
+      sudo dpkg -i "/tmp/${NU_DEB}"
+      rm -f "/tmp/${NU_DEB}"
+    fi
+    success "nushell installed ($(nu --version))"
+  fi
+
+  # Make nushell the default interactive shell in .bashrc
+  if ! grep -qF 'exec nu' "$BASHRC" 2>/dev/null; then
+    cat >> "$BASHRC" <<'NUEOF'
+
+# Launch nushell as default interactive shell when available
+if [[ $- == *i* ]] && command -v nu >/dev/null 2>&1 && [[ -z "$NU_VERSION" ]]; then
+  exec nu
+fi
+NUEOF
+    success "nushell exec block added to $BASHRC"
+  else
+    success "nushell exec block already in $BASHRC"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 11. Deploy configs — prefer local files, fall back to Gist download
 # ---------------------------------------------------------------------------
 if [[ "${INSTALL[configs]}" == "1" ]]; then
   deploy_config() {

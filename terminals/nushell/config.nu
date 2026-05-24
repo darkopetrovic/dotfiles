@@ -17,6 +17,7 @@
 # options using:
 #     config nu --doc | nu-highlight | less -R
 
+$env.config.show_banner = false
 $env.config.render_right_prompt_on_last_line = true
 $env.config.shell_integration.osc133 = false
 
