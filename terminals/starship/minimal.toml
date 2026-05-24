@@ -5,6 +5,7 @@
 
 format = """
 [$username](bold fg:red)\
+$hostname\
 [ | ](dimmed)\
 $directory\
 $git_branch\
@@ -14,6 +15,7 @@ $rust\
 $golang\
 $nodejs\
 $python\
+$shell\
 $cmd_duration\
 $line_break\
 $character"""
@@ -28,6 +30,21 @@ show_always = true
 style_user = "bold fg:red"
 style_root = "bold fg:red"
 format = '[$user]($style)'
+
+[hostname]
+ssh_only = false
+style = "bold fg:red"
+format = '[@$hostname]($style)'
+
+[shell]
+disabled = false
+bash_indicator = 'bash'
+fish_indicator = 'fish'
+zsh_indicator = 'zsh'
+nu_indicator = 'nu'
+unknown_indicator = '?'
+style = "dimmed"
+format = '[ $indicator]($style)'
 
 [directory]
 style = "fg:peach"

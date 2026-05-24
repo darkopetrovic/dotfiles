@@ -8,6 +8,7 @@ format = """
 [](fg:mauve)\
 $os\
 $username\
+$hostname\
 [](bg:blue fg:mauve)\
 $directory\
 [](bg:yellow fg:blue)\
@@ -22,6 +23,7 @@ $bun\
 $python\
 [](fg:teal)\
 $fill\
+$shell\
 $cmd_duration\
 $line_break\
 $character"""
@@ -48,9 +50,24 @@ Raspbian = "󰂹 "
 
 [username]
 show_always = true
-style_user = "bg:mauve fg:base"
+style_user = "bg:mauve fg:user_color"
 style_root = "bg:mauve fg:base bold"
-format = '[ $user ]($style)'
+format = '[ $user]($style)'
+
+[hostname]
+ssh_only = false
+style = "bg:mauve fg:base"
+format = '[@$hostname ]($style)'
+
+[shell]
+disabled = false
+bash_indicator = 'bash'
+fish_indicator = 'fish'
+zsh_indicator = 'zsh'
+nu_indicator = 'nu'
+unknown_indicator = '?'
+style = "fg:overlay1"
+format = '[$indicator ]($style)'
 
 [directory]
 style = "bg:blue fg:base"
@@ -155,3 +172,4 @@ surface0 = "#313244"
 base = "#1e1e2e"
 mantle = "#181825"
 crust = "#11111b"
+user_color = "#af1b9b"
