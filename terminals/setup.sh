@@ -87,5 +87,34 @@ EOF
   success "Starship block added to ~/.bashrc"
 fi
 
+# ── Windows WezTerm symlink (WSL only) ────────────────────────────────────────
+if [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
+  WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
+  if [[ -z "$WIN_USER" ]]; then
+    info "Could not determine Windows username — skipping WezTerm Windows symlink"
+  else
+    WIN_CFG_DIR="/mnt/c/Users/${WIN_USER}/.config/wezterm"
+    WIN_CFG_LUA="${WIN_CFG_DIR}/wezterm.lua"
+    mkdir -p "$WIN_CFG_DIR"
+
+    if [[ -L "$WIN_CFG_LUA" ]]; then
+      success "Windows WezTerm symlink already exists → $WIN_CFG_LUA"
+    elif [[ -f "$WIN_CFG_LUA" ]]; then
+      info "Windows WezTerm config exists as a regular file — skipping (remove it and re-run to replace with symlink)"
+    else
+      info "Creating Windows symlink for WezTerm config..."
+      WIN_DST="C:\\Users\\${WIN_USER}\\.config\\wezterm\\wezterm.lua"
+      WIN_SRC="\\\\wsl.localhost\\${WSL_DISTRO_NAME}\\home\\${USER}\\dotfiles\\terminals\\wezterm\\wezterm.lua"
+      if cmd.exe /c "mklink \"${WIN_DST}\" \"${WIN_SRC}\"" > /dev/null 2>&1; then
+        success "Windows symlink: $WIN_DST → $WIN_SRC"
+      else
+        info "mklink failed (Windows Developer Mode may be required). Copying file instead..."
+        cp "$TERMINALS_DIR/wezterm/wezterm.lua" "$WIN_CFG_LUA"
+        success "Copied wezterm.lua → $WIN_CFG_LUA (re-run after enabling Developer Mode to get a live symlink)"
+      fi
+    fi
+  fi
+fi
+
 echo ""
 echo "Done. Reload with: source ~/.bashrc"

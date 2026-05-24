@@ -17,6 +17,10 @@
 # You can remove these comments if you want or leave
 # them for future reference.
 
+# Don't use stale COLUMNS/LINES inherited from bash; nushell queries terminal size via ioctl
+if "COLUMNS" in $env { hide-env COLUMNS }
+if "LINES" in $env { hide-env LINES }
+
 # Editor
 $env.EDITOR = "nano"
 $env.VISUAL = "nano"

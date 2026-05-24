@@ -86,3 +86,13 @@ Then paste the raw URLs into the `TMUX_CONF_URL` and `FZF_CONF_URL` variables at
 | `fh` | Execute command from history |
 | `fkill` | Fuzzy kill a process |
 | `fcd` | Fuzzy cd |
+
+## Wezterm config Windows link
+
+In elevated powershell:
+
+```powershell
+New-Item -ItemType SymbolicLink `
+  -Path "C:\Users\Darko\.config\wezterm\wezterm.lua" `
+  -Target "\\wsl.localhost\Ubuntu-26.04\home\darko\dotfiles\terminals\wezterm\wezterm.lua"
+```

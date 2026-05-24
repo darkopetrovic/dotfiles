@@ -9,7 +9,7 @@ config.window_background_opacity = 0.93
 config.macos_window_background_blur = 20
 config.window_decorations = "RESIZE|INTEGRATED_BUTTONS"
 config.window_close_confirmation = "NeverPrompt"
-config.adjust_window_size_when_changing_font_size = false
+config.adjust_window_size_when_changing_font_size = true
 config.check_for_updates = false
 
 -- Mica on Windows
@@ -215,5 +215,6 @@ wezterm.on("update-status", function(window, pane)
 		{ Text = "  " },
 	}))
 end)
+
 
 return config
