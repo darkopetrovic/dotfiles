@@ -12,6 +12,8 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 TMUX_CONF_URL="https://gist.githubusercontent.com/darkopetrovic/86275057e4794b9b353b93b2bdc5fd99/raw/.tmux.conf"
 FZF_CONF_URL="https://gist.githubusercontent.com/darkopetrovic/77fcb58be54fdffa1c41d0fc1991359c/raw/.fzf.bash"
+NU_CONF_URL="https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/terminals/nushell/config.nu"
+NU_ENV_URL="https://raw.githubusercontent.com/darkopetrovic/dotfiles/main/terminals/nushell/env.nu"
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASHRC="$HOME/.bashrc"
@@ -25,6 +27,23 @@ error()   { echo "[ERROR] $*" >&2; exit 1; }
 
 require_cmd() {
   command -v "$1" &>/dev/null || error "Required command not found: $1"
+}
+
+# Deploy a single config file: symlink from local repo, or download from URL.
+deploy_config() {
+  local src_local="$1" dest="$2" url="$3"
+  if [[ -f "$src_local" ]]; then
+    info "Linking $(basename "$dest") from local repo..."
+    ln -sf "$src_local" "$dest"
+  elif [[ "$url" != *"YOUR_USERNAME"* ]]; then
+    info "Downloading $(basename "$dest")..."
+    require_cmd curl
+    curl -fsSL "$url" -o "$dest"
+  else
+    info "Skipping $(basename "$dest") — no local file and URL not configured."
+    return
+  fi
+  success "$(basename "$dest") deployed → $dest"
 }
 
 # ---------------------------------------------------------------------------
@@ -135,7 +154,7 @@ done
 # ---------------------------------------------------------------------------
 # apt update — only if at least one apt-sourced package is selected
 # ---------------------------------------------------------------------------
-APT_NEEDED=$(( INSTALL[tmux] + INSTALL[fzf] + INSTALL[bat] + INSTALL[ripgrep] + INSTALL[nodejs] + INSTALL[nushell] ))
+APT_NEEDED=$(( INSTALL[tmux] + INSTALL[fzf] + INSTALL[bat] + INSTALL[ripgrep] + INSTALL[nodejs] ))
 if (( APT_NEEDED > 0 )); then
   info "Updating package index..."
   sudo apt-get update -qq
@@ -302,19 +321,8 @@ if [[ "${INSTALL[nushell]}" == "1" ]]; then
   if command -v nu &>/dev/null; then
     success "nushell already installed ($(nu --version))"
   else
-    info "Installing nushell..."
-    if apt-cache show nushell &>/dev/null 2>&1; then
-      sudo apt-get install -y nushell
-    else
-      info "nushell not in apt, installing from GitHub releases..."
-      NU_VERSION=$(curl -fsSL https://api.github.com/repos/nushell/nushell/releases/latest \
-        | grep '"tag_name"' | cut -d'"' -f4)
-      NU_DEB="nu_${NU_VERSION#v}_$(dpkg --print-architecture).deb"
-      curl -fsSL "https://github.com/nushell/nushell/releases/download/${NU_VERSION}/${NU_DEB}" \
-        -o "/tmp/${NU_DEB}"
-      sudo dpkg -i "/tmp/${NU_DEB}"
-      rm -f "/tmp/${NU_DEB}"
-    fi
+    info "Installing nushell via snap..."
+    sudo snap install nushell --classic
     success "nushell installed ($(nu --version))"
   fi
 
@@ -331,28 +339,23 @@ NUEOF
   else
     success "nushell exec block already in $BASHRC"
   fi
+
+  # Deploy nushell configs
+  NU_CONF_DIR="$HOME/.config/nushell"
+  mkdir -p "$NU_CONF_DIR"
+  deploy_config "$DOTFILES_DIR/terminals/nushell/config.nu" "$NU_CONF_DIR/config.nu" "$NU_CONF_URL"
+  deploy_config "$DOTFILES_DIR/terminals/nushell/env.nu"    "$NU_CONF_DIR/env.nu"    "$NU_ENV_URL"
+  # Ensure config.nu's `source atuin.nu` doesn't fail if atuin isn't installed yet
+  if [[ ! -f "$NU_CONF_DIR/atuin.nu" ]]; then
+    touch "$NU_CONF_DIR/atuin.nu"
+    info "Created empty atuin.nu stub in $NU_CONF_DIR"
+  fi
 fi
 
 # ---------------------------------------------------------------------------
 # 11. Deploy configs — prefer local files, fall back to Gist download
 # ---------------------------------------------------------------------------
 if [[ "${INSTALL[configs]}" == "1" ]]; then
-  deploy_config() {
-    local src_local="$1" dest="$2" gist_url="$3"
-    if [[ -f "$src_local" ]]; then
-      info "Linking $(basename "$dest") from local repo..."
-      ln -sf "$src_local" "$dest"
-    elif [[ "$gist_url" != *"YOUR_USERNAME"* ]]; then
-      info "Downloading $(basename "$dest") from Gist..."
-      require_cmd curl
-      curl -fsSL "$gist_url" -o "$dest"
-    else
-      info "Skipping $(basename "$dest") — no local file and Gist URL not configured."
-      return
-    fi
-    success "$(basename "$dest") deployed → $dest"
-  }
-
   deploy_config "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf" "$TMUX_CONF_URL"
   deploy_config "$DOTFILES_DIR/.fzf.bash"  "$HOME/.fzf.bash"  "$FZF_CONF_URL"
 
