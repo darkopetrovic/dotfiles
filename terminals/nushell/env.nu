@@ -26,7 +26,8 @@ $env.EDITOR = "nano"
 $env.VISUAL = "nano"
 
 # Starship prompt — icons work in WezTerm (Nerd Font), fall back to minimal elsewhere
-$env.STARSHIP_CONFIG = if ($env.TERM_PROGRAM? | default "") == "WezTerm" {
+# TMUX check: tmux strips TERM_PROGRAM, but tmux runs inside WezTerm so Nerd Fonts are available
+$env.STARSHIP_CONFIG = if ($env.TERM_PROGRAM? | default "") == "WezTerm" or ("TMUX" in $env) {
     $"($env.HOME)/.config/starship-nushell.toml"
 } else {
     $"($env.HOME)/.config/starship-minimal.toml"

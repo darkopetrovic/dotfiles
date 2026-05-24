@@ -60,10 +60,17 @@ def lxc-stats [] {
         status: $c.status
         memory: ($c.state.memory.usage? | default 0 | into filesize)
         processes: ($c.state.processes? | default 0)
-        cpu: ($c.state.cpu.usage? | default 0)
+        cpu_time: (
+          ($c.state.cpu.usage? | default 0) / 1_000_000_000
+          | math round --precision 2
+        )
       }
     }
   | table --expand
+}
+
+def lxc-df [name: string] {
+  lxc exec $name -- df -h /
 }
 
 def lxc-ports [name?: string] {
@@ -89,6 +96,14 @@ def lxc-ports [name?: string] {
     }
   | flatten
   | table --expand
+}
+
+def lxcproxy [...args] {
+  ^($env.HOME + "/.local/bin/lxcproxy.sh") ...$args
+}
+
+def lxcsh [name: string] {
+  lxc exec $name -- sudo --login --user ubuntu
 }
 
 def lxc-devices [name?: string] {
