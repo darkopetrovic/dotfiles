@@ -25,8 +25,12 @@ $env.config.shell_integration.osc2 = false
 # Path to dotfiles
 const DOTFILES = "/home/darko/dotfiles"
 
-# Atuin config in dotfiles
-$env.ATUIN_CONFIG_DIR = ($DOTFILES + "/terminals/atuin")
+# Atuin config - use dotfiles location if repo cloned, otherwise default path
+$env.ATUIN_CONFIG_DIR = if ($DOTFILES + "/terminals/atuin" | path exists) {
+    ($DOTFILES + "/terminals/atuin")
+} else {
+    "~/.config/atuin"
+}
 
 # Add dotfiles nushell dir to module search path
 $env.NU_LIB_DIRS = ($env.NU_LIB_DIRS | append ($DOTFILES + "/terminals/nushell"))
