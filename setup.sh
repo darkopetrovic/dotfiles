@@ -366,6 +366,7 @@ NUEOF
     touch "$NU_CONF_DIR/atuin.nu"
     info "Created empty atuin.nu stub in $NU_CONF_DIR"
   fi
+  # Atuin config is sourced via ATUIN_CONFIG_DIR set in config.nu
 fi
 
 # ---------------------------------------------------------------------------
