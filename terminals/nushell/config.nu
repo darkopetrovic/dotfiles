@@ -23,7 +23,7 @@ $env.config.shell_integration.osc133 = false
 $env.config.shell_integration.osc2 = false
 
 # Path to dotfiles
-const DOTFILES = "/home/darko/dotfiles"
+let DOTFILES = ($HOME + "/dotfiles")
 
 # Atuin config - use dotfiles location if repo cloned, otherwise default path
 $env.ATUIN_CONFIG_DIR = if ($DOTFILES + "/terminals/atuin" | path exists) {
@@ -35,8 +35,10 @@ $env.ATUIN_CONFIG_DIR = if ($DOTFILES + "/terminals/atuin" | path exists) {
 # Add dotfiles nushell dir to module search path
 $env.NU_LIB_DIRS = ($env.NU_LIB_DIRS | append ($DOTFILES + "/terminals/nushell"))
 
-# LXC container management module
-use ($DOTFILES + "/terminals/nushell/lxc.nu") *
+# LXC container management module — only when dotfiles repo is cloned
+if (($DOTFILES + "/terminals/nushell/lxc.nu") | path exists) {
+    use ($DOTFILES + "/terminals/nushell/lxc.nu") *
+}
 
 $env.config.hooks.pre_execution = [
     {|| $env.COLUMNS = (term size).columns }
